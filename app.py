@@ -11,7 +11,8 @@ st.markdown("""
     .stTextArea textarea { background-color: #FFFFFF; border: 1px solid #E0E0E0; border-radius: 8px; padding: 15px; font-size: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
     div[role="radiogroup"] { background-color: #FFFFFF; padding: 15px 20px; border: 1px solid #E0E0E0; border-radius: 8px; }
     [data-testid="stFileUploadDropzone"] { background-color: #FFFFFF; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-    .stButton>button { background-color: #2C3E50; color: white; border-radius: 8px; padding: 10px 24px; font-weight: bold; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; margin-top: 15px; }
+    [data-testid="stForm"] { background-color: transparent; border: none; padding: 0; }
+    .stButton>button { background-color: #2C3E50; color: white; border-radius: 8px; padding: 10px 24px; font-weight: bold; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; margin-top: 5px; }
     .stButton>button:hover { background-color: #1A252F; box-shadow: 0 6px 8px rgba(0,0,0,0.15); transform: translateY(-2px); }
 </style>
 """, unsafe_allow_html=True)
@@ -22,11 +23,19 @@ st.caption("クチコミを貼り付けるか、画像をアップロードす�
 api_key = st.secrets.get("GEMINI_API_KEY", "")
 if not api_key: api_key = st.sidebar.text_input("Gemini API Key", type="password")
 
-review_text = st.text_area("お客様からのクチコミ本文（テキスト）：", height=150)
-uploaded_file = st.file_uploader("クチコミの画像（スクリーンショット）を「コピーして貼り付け」または\n「ドラッグ＆ドロップ」", type=["png", "jpg", "jpeg"])
-tone = st.radio("返信の方向性：", ["標準（丁寧・誠実）", "感謝強調（高評価向け）", "お詫び・改善強調（低評価向け）"], horizontal=True)
+with st.form("review_form"):
+    review_text = st.text_area("お客様からのクチコミ本文（テキスト）：", height=150)
+    
+    uploaded_file = st.file_uploader("クチコミの画像（スクリーンショット）を「コピーして貼り付け」または\n「ドラッグ＆ドロップ」", type=["png", "jpg", "jpeg"])
+    # ★スタッフ向けの注意書きを追加
+    st.caption("⚠️ **ご注意**：AIが文字を視覚的に解析するため、画像の読み取りはテキスト入力よりも生成に時間がかかります。")
+    
+    tone = st.radio("返信の方向性：", ["標準（丁寧・誠実）", "感謝強調（高評価向け）", "お詫び・改善強調（低評価向け）"], horizontal=True)
+    
+    st.caption("💡 **ヒント**：入力後にキーボードの **Ctrl ＋ Enter**（Macは ⌘ ＋ Enter）を押すことでも生成をスタートできます。")
+    submitted = st.form_submit_button("返信文を生成する", type="primary")
 
-if st.button("返信文を生成する", type="primary"):
+if submitted:
     if not api_key: st.error("APIキーが設定されていません。")
     elif not review_text and not uploaded_file: st.warning("クチコミ本文を入力するか、画像をアップロードしてください。")
     else:
@@ -37,7 +46,6 @@ if st.button("返信文を生成する", type="primary"):
                 target_length = int(review_length * 1.5)
                 length_rule = f"\n5. 【重要】返信文は元のクチコミの約1.5倍（約{target_length}文字）のボリュームになるようしっかり肉付けして作成してください。" if review_length <= 700 else "\n5. 【重要】長文のため簡潔に要点をまとめて作成してください。"
             else:
-                # ★画像入力時の指示を変更
                 length_rule = "\n5. 【重要】画像から読み取ったクチコミ本文の文字数を把握し、その約1.5倍のボリュームになるようしっかり肉付けして作成してください。"
 
             system_prompt = f"""あなたは「游海亭 みやじま」のWeb担当者です。以下の情報を踏まえて返信を作成してください。
@@ -53,7 +61,7 @@ if st.button("返信文を生成する", type="primary"):
 2. 誠実な謝罪と改善姿勢、または感謝を示す。
 3. 丁寧な「です・ます調」で作成。
 4. 返信文章のみを出力。{length_rule}
-5. 最後に改行して「湯野浜温泉 游海亭みやじま」と記名する。"""
+5. 最後に改行して「湯野浜温泉 游海亭 みやじま」と記名する。"""
 
             ai_contents = [system_prompt]
             if review_text: ai_contents.append(f"クチコミ本文:\n{review_text}")
