@@ -1,6 +1,6 @@
 import streamlit as st
 from google import genai
-from PIL import Image  # 画像処理用のツール
+from PIL import Image
 
 # 1. ページ基本設定（ブラウザのタブ名とアイコン）
 st.set_page_config(page_title="游海亭 みやじま クチコミ返信ツール", page_icon="🌊")
@@ -80,8 +80,9 @@ review_text = st.text_area(
     placeholder="例：部屋からの夕日がとても綺麗でした。夕食の海鮮も新鮮で美味しかったです。"
 )
 
+# ★ ご要望の通り、画像アップロードの案内文を修正しました
 uploaded_file = st.file_uploader(
-    "または、クチコミの画像（スクリーンショット）をここにドラッグ＆ドロップ", 
+    "方法1：「クチコミの画像（スクリーンショット）をコピーして貼り付け」\n\n方法2：「クチコミの画像（スクリーンショット）をここにドラッグ＆ドロップ」", 
     type=["png", "jpg", "jpeg"]
 )
 
@@ -101,11 +102,10 @@ if st.button("返信文を生成する", type="primary"):
         try:
             client = genai.Client(api_key=api_key)
             
-            # 文字数の指定ロジック（画像のみの場合は標準的な長さを指定）
             if review_text:
                 review_length = len(review_text)
                 if review_length <= 700:
-                    length_rule = f"\n5. 【重要】お客様のクチコミが{review_length}文字です。返信文はクチコミの1.5倍程度のボリューム（約{review_length}文字程度）になるよう、当館の魅力や感謝の言葉を織り交ぜて作成してください。"
+                    length_rule = f"\n5. 【重要】お客様のクチコミが{review_length}文字です。返信文はクチコミと同程度のボリューム（約{review_length}文字程度）になるよう、当館の魅力や感謝の言葉を織り交ぜて作成してください。"
                 else:
                     length_rule = f"\n5. 【重要】お客様のクチコミが{review_length}文字と長文のため、簡潔かつ丁寧に要点をまとめた返信文を作成してください（無理に同じ長さに伸ばす必要はありません）。"
             else:
@@ -132,12 +132,10 @@ if st.button("返信文を生成する", type="primary"):
 4. 前置きや解説は含めず、そのまま管理画面にコピペできる返信文章のみを出力してください。{length_rule}
 5. 返信の最後には必ず、改行して「湯野浜温泉 游海亭 みやじま」という署名（記名）を入れてください。
 """
-            # AIに渡すデータの準備（テキストと画像をまとめる）
             ai_contents = [system_prompt]
             if review_text:
                 ai_contents.append(f"クチコミ本文:\n{review_text}")
             if uploaded_file:
-                # アップロードされた画像をAIが読める形式に変換
                 img = Image.open(uploaded_file)
                 ai_contents.append("以下のクチコミ画像の内容を読み取って返信を作成してください：")
                 ai_contents.append(img)
