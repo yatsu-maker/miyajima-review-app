@@ -53,7 +53,7 @@ if st.button("返信文を生成する", type="primary"):
 2. 誠実な謝罪と改善姿勢、または感謝を示す。
 3. 丁寧な「です・ます調」で作成。
 4. 返信文章のみを出力。{length_rule}
-5. 最後に改行して「湯野浜温泉 游海亭 みやじま」と記名する。"""
+5. 最後に改行して「湯野浜温泉 游海亭みやじま」と記名する。"""
 
             ai_contents = [system_prompt]
             if review_text: ai_contents.append(f"クチコミ本文:\n{review_text}")
