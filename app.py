@@ -34,9 +34,11 @@ if st.button("返信文を生成する", type="primary"):
             client = genai.Client(api_key=api_key)
             if review_text:
                 review_length = len(review_text)
-                length_rule = f"\n5. 【重要】返信文は約{review_length}文字程度になるよう作成してください。" if review_length <= 700 else "\n5. 【重要】長文のため簡潔に要点をまとめて作成してください。"
+                target_length = int(review_length * 1.5)
+                length_rule = f"\n5. 【重要】返信文は元のクチコミの約1.5倍（約{target_length}文字）のボリュームになるようしっかり肉付けして作成してください。" if review_length <= 700 else "\n5. 【重要】長文のため簡潔に要点をまとめて作成してください。"
             else:
-                length_rule = "\n5. 【重要】画像の内容を読み取り、200〜300文字程度で作成してください。"
+                # ★画像入力時の指示を変更
+                length_rule = "\n5. 【重要】画像から読み取ったクチコミ本文の文字数を把握し、その約1.5倍のボリュームになるようしっかり肉付けして作成してください。"
 
             system_prompt = f"""あなたは「游海亭 みやじま」のWeb担当者です。以下の情報を踏まえて返信を作成してください。
 【游海亭 みやじまの基本情報】
